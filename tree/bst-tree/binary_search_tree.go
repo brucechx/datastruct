@@ -1,160 +1,374 @@
 package bst_tree
 
 import (
-	"sync"
 	"fmt"
+	"strings"
 )
 
-// Node a single node that composes the tree
+// 二叉搜索数
+/*
+// 前驱结点
+1.1. 若一个节点有左子树，那么该节点的前驱节点是其左子树中val值最大的节点（也就是左子树中所谓的rightMostNode）
+1.2. 若一个节点没有左子树，那么判断该节点和其父节点的关系
+	1.2.1 若该节点是其父节点的右边孩子，那么该节点的前驱结点即为其父节点。
+	1.2.2 若该节点是其父节点的左边孩子，那么需要沿着其父亲节点一直向树的顶端寻找，直到找到一个节点P，P节点是其父节点Q的右边孩子，那么Q就是该节点的前驱节点
+
+// 后继结点
+2.1. 若一个节点有右子树，那么该节点的后继节点是其右子树中val值最小的节点（也就是右子树中所谓的leftMostNode）
+2.2. 若一个节点没有右子树，那么判断该节点和其父节点的关系
+	2.2.1 若该节点是其父节点的左边孩子，那么该节点的后继结点即为其父节点
+	2.2.2 若该节点是其父节点的右边孩子，那么需要沿着其父亲节点一直向树的顶端寻找，直到找到一个节点P，P节点是其父节点Q的左边孩子，那么Q就是该节点的后继节点
+
+// 删除
+二叉搜索树的结点删除比插入较为复杂，总体来说，结点的删除可归结为三种情况：
+3.1. 如果结点z没有孩子节点，那么只需简单地将其删除，并修改父节点，用NIL来替换z；
+3.2. 如果结点z只有一个孩子，那么将这个孩子节点提升到z的位置，并修改z的父节点，用z的孩子替换z；
+3.3. 如果结点z有2个孩子，那么查找z的后继y，此外后继一定在z的右子树中，然后让y替换z。
+	3.3.1 如果y是z的右孩子，那么用y替换z, 并仅留下y的右孩子
+	3.3.2 如果y不是z的右孩子，那么先用y的右孩子替换y, 再用y替换z。
+*/
+
+// 二叉树对外接口
+type BstT interface {
+	Insert(key int, i Item) // 加入结点
+	Search(key int) (Item, error) // 查找结点
+	Exist(key int) bool // 结点是否存在
+	Remove(key int) error // 输出结点
+	MaxNode() Item // 树中最大结点
+	MinNode() Item // 树中最小结点
+	PreOrder(callback func (i Item)) // 前序遍历
+	MidOrder(callback func (i Item)) // 中续遍历
+	PostOrder(callback func (i Item)) // 后续遍历
+	PreSuccessor(key int) (Item, error) // 前驱结点
+	Successor(key int) (Item, error) // 后继结点
+}
+
+// 数据结点
+type Item interface {
+
+}
+
+// 树结点
 type Node struct {
-	key   int  // 中序遍历的节点序号
-	value interface{} // 节点存储的值
-	left  *Node //left
-	right *Node //right
+	key int // 结点序号
+	val Item // 结点数据
+	left *Node // 左结点
+	right *Node // 右结点
 }
 
-// ItemBinarySearchTree the binary search tree of Items
-type ItemBinarySearchTree struct {
-	root *Node
-	lock sync.RWMutex
+// 二叉搜索树
+type BstTree struct {
+	root *Node // 根结点
 }
 
-// Insert inserts the Item t in the tree
-func (bst *ItemBinarySearchTree) Insert(key int, value interface{}) {
-	bst.lock.Lock()
-	defer bst.lock.Unlock()
-	n := &Node{key, value, nil, nil}
-	if bst.root == nil {
-		bst.root = n
-	} else {
-		insertNode(bst.root, n)
+func NewBstTree(key int, val Item) *BstTree{
+	return &BstTree{
+		root: &Node{
+			key:   key,
+			val:   val,
+			left:  nil,
+			right: nil,
+		},
 	}
 }
 
-// internal function to find the correct place for a node in a tree
-func insertNode(node, newNode *Node) {
-	if newNode.key < node.key {
-		if node.left == nil {
-			node.left = newNode
-		} else {
-			insertNode(node.left, newNode)
+func (b *BstTree)Insert(key int, i Item){
+	newNode := &Node{
+		key:   key,
+		val:   i,
+		left:  nil,
+		right: nil,
+	}
+	if b.root == nil{
+		b.root = newNode
+		return
+	}
+	b.insert(b.root, newNode)
+}
+
+func (b *BstTree)insert(curr, new *Node){
+	if new.key < curr.key{
+		if curr.left == nil{
+			curr.left = new
+		}else {
+			b.insert(curr.left, new)
 		}
-	} else {
-		if node.right == nil {
-			node.right = newNode
-		} else {
-			insertNode(node.right, newNode)
+	}else {
+		if curr.right == nil{
+			curr.right = new
+		}else {
+			b.insert(curr.right, new)
 		}
 	}
 }
 
-// InOrderTraverse visits all nodes with in-order traversing
-func (bst *ItemBinarySearchTree) InOrderTraverse(f func(interface{})) {
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	inOrderTraverse(bst.root, f)
-}
-
-// internal recursive function to traverse in order
-func inOrderTraverse(n *Node, f func(interface{})) {
-	if n != nil {
-		inOrderTraverse(n.left, f)
-		f(n.value)
-		inOrderTraverse(n.right, f)
+func (b *BstTree)Search(key int) (Item, error){
+	if node, err :=  b.search(b.root, key); err != nil{
+		return nil, err
+	}else {
+		return node.val, nil
 	}
 }
 
-// PreOrderTraverse visits all nodes with pre-order traversing
-func (bst *ItemBinarySearchTree) PreOrderTraverse(f func(interface{})) {
-	bst.lock.Lock()
-	defer bst.lock.Unlock()
-	preOrderTraverse(bst.root, f)
+func (b *BstTree)search(n *Node, key int) (*Node, error){
+	for n != nil{
+		if key == n.key{
+			return n, nil
+		}
+		if key < n.key{
+			n = n.left
+		}else {
+			n = n.right
+		}
+	}
+	return nil, fmt.Errorf("node:%d does not exist", key)
 }
 
-// internal recursive function to traverse pre order
-func preOrderTraverse(n *Node, f func(interface{})) {
-	if n != nil {
-		f(n.value)
-		preOrderTraverse(n.left, f)
-		preOrderTraverse(n.right, f)
+
+func (b *BstTree)Exist(key int) bool{
+	if _, err := b.search(b.root, key); err != nil{
+		return false
+	}else {
+		return true
 	}
 }
 
 
-// PostOrderTraverse visits all nodes with post-order traversing
-func (bst *ItemBinarySearchTree) PostOrderTraverse(f func(interface{})) {
-	bst.lock.Lock()
-	defer bst.lock.Unlock()
-	postOrderTraverse(bst.root, f)
-}
-
-// internal recursive function to traverse post order
-func postOrderTraverse(n *Node, f func(interface{})) {
-	if n != nil {
-		postOrderTraverse(n.left, f)
-		postOrderTraverse(n.right, f)
-		f(n.value)
+func (b *BstTree) MaxNode() Item{
+	node := b.maxNode(b.root)
+	if node != nil{
+		return node.val
 	}
+	return nil
 }
 
-// Min returns the Item with min value stored in the tree
-func (bst *ItemBinarySearchTree) Min() *interface{} {
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	n := bst.root
-	if n == nil {
+func (b *BstTree) maxNode(n *Node) *Node{
+	if n == nil{
 		return nil
 	}
-	for {
-		if n.left == nil {
-			return &n.value
-		}
-		n = n.left
-	}
-}
-
-// Max returns the Item with max value stored in the tree
-func (bst *ItemBinarySearchTree) Max() *interface{} {
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	n := bst.root
-	if n == nil {
-		return nil
-	}
-	for {
-		if n.right == nil {
-			return &n.value
-		}
+	for n.right != nil {
 		n = n.right
 	}
+	return n
 }
 
-// Search returns true if the Item t exists in the tree
-func (bst *ItemBinarySearchTree) Search(key int) bool {
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	return search(bst.root, key)
+func (b *BstTree) MinNode() Item{
+	node := b.minNode(b.root)
+	if node == nil{
+		return nil
+	}
+	return node.val
 }
 
-// internal recursive function to search an item in the tree
-func search(n *Node, key int) bool {
-	if n == nil {
-		return false
+func (b *BstTree) minNode(n *Node) *Node{
+	for n.left != nil{
+		n = n.left
 	}
-	if key < n.key {
-		return search(n.left, key)
-	}
-	if key > n.key {
-		return search(n.right, key)
-	}
-	return true
+	return n
 }
+
+func (b *BstTree)PreOrder(callback func (i Item))  {
+	b.preOrder(b.root, callback)
+}
+
+func (b *BstTree)preOrder(n *Node, callback func(i Item)){
+	if n != nil{
+		callback(n.val)
+		b.preOrder(n.left, callback)
+		b.preOrder(n.right, callback)
+	}
+}
+
+func (b *BstTree)MidOrder(callback func (i Item))  {
+	b.midOrder(b.root, callback)
+}
+
+func (b *BstTree)midOrder(n *Node, callback func(i Item)){
+	if n != nil{
+		b.midOrder(n.left, callback)
+		callback(n.val)
+		b.midOrder(n.right, callback)
+	}
+}
+
+func (b *BstTree)PostOrder(callback func (i Item))  {
+	b.postOrder(b.root, callback)
+}
+
+func (b *BstTree)postOrder(n *Node, callback func(i Item)){
+	if n != nil{
+		b.postOrder(n.left, callback)
+		b.postOrder(n.right, callback)
+		callback(n.val)
+	}
+}
+
+func (b *BstTree)ParentNode(key int) *Node{
+	return b.parentNode(b.root, key)
+}
+
+func (b *BstTree)parentNode(n *Node, key int) *Node{
+	if n.left == nil && n.right == nil{
+		return nil
+	}
+	for n != nil{
+		if n.key == key{
+			return nil
+		}
+		if n.left != nil && n.left.key == key{
+			return n
+		}
+		if n.right != nil && n.right.key == key{
+			return n
+		}
+		if n.left != nil && key < n.key{
+			n = n.left
+			continue
+		}
+		if n.right != nil && key > n.key{
+			n = n.right
+			continue
+		}
+	}
+	return nil
+}
+
+func (b *BstTree)PreSuccessor(key int) (Item, error) {
+	node, err := b.preSuccessor(key)
+	if err != nil || node == nil{
+		return node, err
+	}
+	return node.val, nil
+}
+
+// 前驱结点
+func (b *BstTree)preSuccessor(key int) (*Node, error){
+	currentNode, err := b.search(b.root, key)
+	if err != nil{
+		return nil, err
+	}
+	// 1.1
+	if currentNode.left != nil{
+		return b.maxNode(currentNode.left), nil
+	}
+	// 1.2
+	parentNode := b.ParentNode(key)
+	if parentNode == nil{
+		return nil, nil
+	}
+	// 1.2.1
+	if currentNode == parentNode.right{
+		return parentNode, nil
+	}
+	// 1.2.2
+	for parentNode != nil && currentNode == parentNode.left{
+		currentNode = parentNode
+		parentNode = b.ParentNode(parentNode.key)
+	}
+	return parentNode, nil
+}
+
+// 后继结点
+func (b *BstTree)Successor(key int) (Item, error) {
+	node, err := b.successor(key)
+	if err != nil || node == nil{
+		return nil, err
+	}
+	return node.val, nil
+}
+
+func (b *BstTree)successor(key int) (*Node, error){
+	currentNode, err := b.search(b.root, key)
+	if err != nil{
+		return nil, err
+	}
+	// 2.1
+	if currentNode.right != nil{
+		return b.minNode(currentNode.right), nil
+	}
+	// 2.2
+	parentNode := b.ParentNode(key)
+	if parentNode == nil{
+		return nil, nil
+	}
+	// 2.2.1
+	if currentNode == parentNode.left{
+		return parentNode, nil
+	}
+	// 2.2.2
+	for parentNode != nil && currentNode == parentNode.right{
+		currentNode = parentNode
+		parentNode = b.ParentNode(parentNode.key)
+	}
+	return parentNode, nil
+}
+
+func (b *BstTree)Remove(key int) error{
+	currentNode, err := b.search(b.root, key)
+	if err != nil{
+		return err
+	}
+	// 3.1
+	if currentNode.left == nil && currentNode.right == nil{
+		parent := b.ParentNode(key)
+		if currentNode == parent.left{
+			parent.left = nil
+		}else {
+			parent.right = nil
+		}
+		currentNode = nil
+		return nil
+	}
+	// 3.2
+	parent := b.ParentNode(key)
+	if currentNode.left == nil && currentNode.right != nil{
+		if currentNode == parent.left{
+			parent.left = currentNode.right
+		}else {
+			parent.right = currentNode.right
+		}
+		currentNode = nil
+		return nil
+	}
+	if currentNode.right == nil && currentNode.left != nil{
+		if currentNode == parent.left{
+			parent.left = currentNode.left
+		}else {
+			parent.right = currentNode.left
+		}
+		currentNode = nil
+		return nil
+	}
+	// 3.3
+	successor, err := b.successor(key)
+	if err != nil{
+		return err
+	}
+	// 3.3.1
+	if successor == currentNode.right{
+		if currentNode == parent.left{
+			parent.left = successor
+		}else {
+			parent.right = successor
+		}
+		successor.left = currentNode.left
+		return nil
+	}
+	// 3.3.2
+	// 那么先用y的右孩子替换y, 再用y替换z。
+	successor = successor.right
+	if currentNode == parent.left{
+		parent.left = successor
+	}else {
+		parent.right = successor
+	}
+	return nil
+}
+
 
 // Remove removes the Item with key `key` from the tree
-func (bst *ItemBinarySearchTree) Remove(key int) {
-	bst.lock.Lock()
-	defer bst.lock.Unlock()
-	remove(bst.root, key)
+func (b *BstTree) Remove2(key int) {
+	remove(b.root, key)
 }
 
 // 递归删除节点
@@ -194,29 +408,37 @@ func remove(node *Node, key int) *Node {
 	}
 
 	// 要删除的节点有 2 个子节点，找到右子树的最左节点，替换当前节点
-	leftmostrightside := node.right
+	leftMostRightSide := node.right
 	for {
 		// 一直遍历找到最左节点
 		//find smallest value on the right side
-		if leftmostrightside != nil && leftmostrightside.left != nil {
-			leftmostrightside = leftmostrightside.left
+		if leftMostRightSide != nil && leftMostRightSide.left != nil {
+			leftMostRightSide = leftMostRightSide.left
 		} else {
 			break
 		}
 	}
 	// 使用右子树的最左节点替换当前节点，即删除当前节点
-	node.key, node.value = leftmostrightside.key, leftmostrightside.value
+	if leftMostRightSide != nil{
+		node.key, node.val = leftMostRightSide.key, leftMostRightSide.val
+	}
 	node.right = remove(node.right, node.key)
 	return node
 }
 
+func (b *BstTree)String() string{
+	var result []string
+	b.MidOrder(func(i Item) {
+		result = append(result, fmt.Sprintf("%v", i))
+	})
+	res := strings.Join(result, ",")
+	return res
+}
 
 // String prints a visual representation of the tree
-func (bst *ItemBinarySearchTree) String() {
-	bst.lock.Lock()
-	defer bst.lock.Unlock()
+func (b *BstTree) String2() {
 	fmt.Println("------------------------------------------------")
-	stringify(bst.root, 0)
+	stringify(b.root, 0)
 	fmt.Println("------------------------------------------------")
 }
 
@@ -234,129 +456,3 @@ func stringify(n *Node, level int) {
 		stringify(n.right, level)
 	}
 }
-
-
-// ===========================================================
-
-// 迭代查找
-func (bst *ItemBinarySearchTree) IterativeSearch(key int) bool{
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	return iterativeSearch(bst.root, key)
-}
-
-func iterativeSearch(n *Node, key int) bool{
-	for n != nil{
-		if key == n.key{
-			return true
-		}
-		if key < n.key{
-			n = n.left
-		}else {
-			n = n.right
-		}
-	}
-	return false
-}
-
-
-func (bst *ItemBinarySearchTree)SearchNode(key int) *Node{
-	n := bst.root
-	for n != nil{
-		if key == n.key{
-			return n
-		}
-		if key < n.key{
-			n = n.left
-		}else {
-			n = n.right
-		}
-	}
-	return nil
-}
-
-// getParentNode
-func (bst *ItemBinarySearchTree) GetParentNode(key int) *Node{
-	bst.lock.RLock()
-	defer bst.lock.RUnlock()
-	return bst.getParentNode(bst.root, key)
-}
-
-func (bst *ItemBinarySearchTree) getParentNode(n *Node, key int) *Node{
-	if n.left == nil && n.right == nil{
-		return nil
-	}
-	for n != nil{
-		if n.left != nil && n.left.key == key{
-			return n
-		}
-		if n.right != nil && n.right.key == key{
-			return n
-		}
-		if key < n.key{
-			n = n.left
-		}
-		if key > n.key{
-			n = n.right
-		}
-		if key == n.key{
-			return nil
-		}
-	}
-	return nil
-}
-
-// 前驱结点
-func (bst *ItemBinarySearchTree) predecessor(key int) *Node {
-	x := bst.SearchNode(key)
-	if x.left != nil{
-		return bst.MaxiMum(x.left.key)
-	}
-	y := bst.GetParentNode(key)
-	for y != nil && x == y.left{
-		x = y
-		y = bst.GetParentNode(y.key)
-	}
-	return y
-}
-
-// 后继结点
-func (bst *ItemBinarySearchTree) Successor(key int) *Node{
-	x := bst.SearchNode(key)
-	if x.right != nil{
-		return bst.MiniMum(x.right.key)
-	}
-	y := bst.GetParentNode(key)
-	for y != nil && x == y.right{
-		x = y
-		y = bst.GetParentNode(y.key)
-	}
-	return y
-}
-
-func (bst *ItemBinarySearchTree) MiniMum(key int) *Node {
-	n := bst.SearchNode(key)
-	if n == nil {
-		return nil
-	}
-	for {
-		if n.left == nil {
-			return n
-		}
-		n = n.left
-	}
-}
-
-func (bst *ItemBinarySearchTree) MaxiMum(key int) *Node {
-	n := bst.SearchNode(key)
-	if n == nil {
-		return nil
-	}
-	for {
-		if n.right == nil {
-			return n
-		}
-		n = n.right
-	}
-}
-

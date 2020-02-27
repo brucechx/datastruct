@@ -1,182 +1,193 @@
 package bst_tree
 
 import (
-	"testing"
 	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 /*
-				8
-			  /    \
-             4      10
-           /  \     / \
-         2     6   9   11
-        / \   / \
-       1   3 5   7
- */
-var bst ItemBinarySearchTree
+// 拓扑图1
+			6
+	     /     \
+	  1         7
+		\        \
+         5        9
+        /        / \
+       3        8   10
+      / \
+     2   4
+*/
 
-func fillTree(bst *ItemBinarySearchTree) {
-	bst.Insert(8, "8")
-	bst.Insert(4, "4")
-	bst.Insert(10, "10")
-	bst.Insert(2, "2")
-	bst.Insert(6, "6")
-	bst.Insert(1, "1")
-	bst.Insert(3, "3")
-	bst.Insert(5, "5")
-	bst.Insert(7, "7")
-	bst.Insert(9, "9")
+/*
+// 拓扑图2
+			6
+	     /     \
+	  1         7
+		\        \
+         5        9
+        /        / \
+       3        8   11
+      / \			/
+     2   4         10
+*/
+
+func initBinarySearchTree() *BstTree {
+	bst := NewBstTree(6, 6)
+	bst.Insert(1, 1)
+	bst.Insert(7, 7)
+	bst.Insert(5, 5)
+	bst.Insert(9, 9)
+	bst.Insert(3, 3)
+	bst.Insert(8, 8)
+	bst.Insert(10, 10)
+	bst.Insert(2, 2)
+	bst.Insert(4, 4)
+	return bst
 }
 
-func TestInsert(t *testing.T) {
-	fillTree(&bst)
-	bst.String()
-
-	bst.Insert(11, "11")
-	bst.String()
+func initBinarySearchTree2() *BstTree {
+	bst := NewBstTree(6, 6)
+	bst.Insert(1, 1)
+	bst.Insert(7, 7)
+	bst.Insert(5, 5)
+	bst.Insert(9, 9)
+	bst.Insert(3, 3)
+	bst.Insert(8, 8)
+	bst.Insert(11, 11)
+	bst.Insert(2, 2)
+	bst.Insert(4, 4)
+	bst.Insert(10, 10)
+	return bst
 }
 
-// isSameSlice returns true if the 2 slices are identical
-func isSameSlice(a, b []string) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a == nil || b == nil {
-		return false
-	}
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+func TestBstTree(t *testing.T){
+	TestBstTree_PreOrder(t)
+	TestBstTree_MidOrder(t)
+	TestBstTree_PostOrder(t)
+	TestBstTree_Search(t)
+	TestBstTree_Exist(t)
+	TestBstTree_MaxNode_MinNode(t)
+	TestBstTree_PreSuccessor(t)
+	TestBstTree_Successor(t)
+	TestBstTree_Remove1_1(t)
+	TestBstTree_Remove1_2(t)
+	TestBstTree_Remove1_3(t)
+	TestBstTree_Remove1_4(t)
+	TestBstTree_Remove2(t)
 }
 
-func TestInOrderTraverse(t *testing.T) {
+func TestBstTree_PreOrder(t *testing.T) {
+	bstTree := initBinarySearchTree()
 	var result []string
-	bst.InOrderTraverse(func(i interface{}) {
-		result = append(result, fmt.Sprintf("%s", i))
+	bstTree.PreOrder(func(i Item) {
+		result = append(result, fmt.Sprintf("%v", i))
 	})
-	if !isSameSlice(result, []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}) {
-		t.Errorf("Traversal order incorrect, got %v", result)
-	}
+	res := strings.Join(result, ",")
+	assert.Equal(t, "6,1,5,3,2,4,7,9,8,10", res)
 }
 
-func TestPreOrderTraverse(t *testing.T) {
+func TestBstTree_MidOrder(t *testing.T) {
+	bstTree := initBinarySearchTree()
 	var result []string
-	bst.PreOrderTraverse(func(i interface{}) {
-		result = append(result, fmt.Sprintf("%s", i))
+	bstTree.MidOrder(func(i Item) {
+		result = append(result, fmt.Sprintf("%v", i))
 	})
-	if !isSameSlice(result, []string{"8", "4", "2", "1", "3", "6", "5", "7", "10", "9", "11"}) {
-		t.Errorf("Traversal order incorrect, got %v instead of %v", result, []string{"8", "4", "2", "1", "3", "6", "5", "7", "10", "9", "11"})
-	}
+	res := strings.Join(result, ",")
+	assert.Equal(t, "1,2,3,4,5,6,7,8,9,10", res)
 }
 
-func TestPostOrderTraverse(t *testing.T) {
+func TestBstTree_PostOrder(t *testing.T) {
+	bstTree := initBinarySearchTree()
 	var result []string
-	bst.PostOrderTraverse(func(i interface{}) {
-		result = append(result, fmt.Sprintf("%s", i))
+	bstTree.PostOrder(func(i Item) {
+		result = append(result, fmt.Sprintf("%v", i))
 	})
-	if !isSameSlice(result, []string{"1", "3", "2", "5", "7", "6", "4", "9", "11", "10", "8"}) {
-		t.Errorf("Traversal order incorrect, got %v instead of %v", result, []string{"1", "3", "2", "5", "7", "6", "4", "9", "11", "10", "8"})
-	}
+	res := strings.Join(result, ",")
+	assert.Equal(t, "2,4,3,5,1,8,10,9,7,6", res)
 }
 
-func TestMin(t *testing.T) {
-	if fmt.Sprintf("%s", *bst.Min()) != "1" {
-		t.Errorf("min should be 1")
-	}
+func TestBstTree_Search(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	val, err := bstTree.Search(3)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, val, 3)
 }
 
-func TestMax(t *testing.T) {
-	if fmt.Sprintf("%s", *bst.Max()) != "11" {
-		t.Errorf("max should be 11")
-	}
+func TestBstTree_Exist(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	res := bstTree.Exist(3)
+	assert.Equal(t, true, res)
+	res = bstTree.Exist(33)
+	assert.Equal(t, false, res)
 }
 
-func TestSearch(t *testing.T) {
-	fillTree(&bst)
-	if !bst.Search(1) || !bst.Search(8) {
-		t.Errorf("search not working")
-	}
-	if !bst.IterativeSearch(1) || !bst.IterativeSearch(8)  {
-		t.Errorf("search not working")
-	}
+func TestBstTree_MaxNode_MinNode(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	maxNode := bstTree.MaxNode()
+	assert.Equal(t, 10, maxNode)
+	minNode := bstTree.MinNode()
+	assert.Equal(t, 1, minNode)
 }
 
-func TestRemove(t *testing.T) {
-	bst.Remove(1)
-	if fmt.Sprintf("%s", *bst.Min()) != "2" {
-		t.Errorf("min should be 2")
-	}
+func TestBstTree_PreSuccessor(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	v1, _ := bstTree.PreSuccessor(4)
+	assert.Equal(t, 3, v1)
+	v2, _ := bstTree.PreSuccessor(2)
+	assert.Equal(t, 1, v2)
+	v3, _ := bstTree.PreSuccessor(6)
+	assert.Equal(t, 5, v3)
 }
 
-func TestGetParentNode(t *testing.T){
-	fillTree(&bst)
-	cases := []struct{
-		input int
-		output interface{}
-	}{
-		{8, nil},
-		{4, 8},
-		{1, 2},
-		{9, 10},
-	}
-	for _, cas := range cases{
-		res := bst.GetParentNode(cas.input)
-		if res != nil{
-			if res.key != cas.output{
-				t.Errorf("assert %v, res=%v", cas.output, res.key)
-			}
-		}
-
-	}
+func TestBstTree_Successor(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	v1, _ := bstTree.Successor(7)
+	assert.Equal(t, 8, v1)
+	v2, _ := bstTree.Successor(5)
+	assert.Equal(t, 6, v2)
+	v3, _ := bstTree.Successor(2)
+	assert.Equal(t, 3, v3)
 }
 
-func TestSuccessor(t *testing.T){
-	fillTree(&bst)
-	cases := []struct{
-		input int
-		output interface{}
-	}{
-		{8, 9},
-		{3, 4},
-		{5, 6},
-		{9, 10},
-	}
-	for _, cas := range cases{
-		res := bst.Successor(cas.input)
-		if res != nil{
-			if res.key != cas.output{
-				t.Errorf("assert %v, res=%v", cas.output, res.key)
-			}
-		}
+func TestBstTree_Remove1_1(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	err := bstTree.Remove(2) // 3.1
+	assert.Equal(t, nil, err)
+	res := bstTree.String()
+	assert.Equal(t, "1,3,4,5,6,7,8,9,10", res)
 
-	}
 }
 
-func TestPreSuccessor(t *testing.T){
-	fillTree(&bst)
-	cases := []struct{
-		input int
-		output interface{}
-	}{
-		{9, 8},
-		{4, 3},
-		{6, 5},
-		{10, 9},
-	}
-	for _, cas := range cases{
-		res := bst.predecessor(cas.input)
-		if res != nil{
-			if res.key != cas.output{
-				t.Errorf("assert %v, res=%v", cas.output, res.key)
-			}
-		}
+func TestBstTree_Remove1_2(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	err := bstTree.Remove(1) // 3.2
+	assert.Equal(t, nil, err)
+	res := bstTree.String()
+	assert.Equal(t, "2,3,4,5,6,7,8,9,10", res)
+}
 
-	}
+func TestBstTree_Remove1_3(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	err := bstTree.Remove(9) // 3.3.1
+	assert.Equal(t, nil, err)
+	res := bstTree.String()
+	assert.Equal(t, "1,2,3,4,5,6,7,8,10", res)
+}
+
+func TestBstTree_Remove1_4(t *testing.T) {
+	bstTree2 := initBinarySearchTree2()
+	err := bstTree2.Remove(9) // 3.3.2
+	assert.Equal(t, nil, err)
+	res := bstTree2.String()
+	assert.Equal(t, "1,2,3,4,5,6,7", res)
+}
+
+func TestBstTree_Remove2(t *testing.T) {
+	bstTree := initBinarySearchTree()
+	bstTree.Remove2(2)
+	res := bstTree.String()
+	assert.Equal(t, "1,3,4,5,6,7,8,9,10", res)
 }
