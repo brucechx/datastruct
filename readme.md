@@ -34,6 +34,7 @@
 +  [hash_map](./doc/hash_table_map/hash_map.md)
 
 ## [redis数据结构实现](./doc/redis/README.md)
++ [skiplist](./doc/redis/skiplist/skiplist.md)
 
 ## 参考
 - [Go-Algorithm](https://github.com/RincLiu/Go-Algorithm)
