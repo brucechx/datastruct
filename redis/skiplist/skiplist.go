@@ -45,6 +45,10 @@ func randomLevel() int {
 	return level
 }
 
+func (sl *SkipList) Len() int{
+	return sl.len
+}
+
 // Front returns first element in the skiplist which maybe nil.
 func (sl *SkipList) Front() *Element {
 	return sl.header.forward[0]
