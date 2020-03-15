@@ -12,10 +12,27 @@ func RebuildTree(preOrderResult, inOrderResult []int) (root *BinTreeNode){
 	if len(preOrderResult) == 0{
 		return nil
 	}
+	root = &BinTreeNode{
+		data:   preOrderResult[0],
+	}
+	rootIndex := getIndex(inOrderResult, preOrderResult[0])
+	root.lChild = RebuildTree(preOrderResult[1:rootIndex+1], inOrderResult[:rootIndex])
+	root.rChild = RebuildTree(preOrderResult[rootIndex+1:], inOrderResult[rootIndex+1:])
+	return root
+}
+
+
+
+func RebuildTree2(preOrderResult, inOrderResult []int) (root *BinTreeNode){
+	if len(preOrderResult) == 0{
+		return nil
+	}
 	return rebuildTree(preOrderResult, inOrderResult,
 		0, len(preOrderResult) - 1,
 		0, len(inOrderResult) - 1)
 }
+
+
 
 func rebuildTree(preOrderResult, inOrderResult []int,
 	preOrderStartIndex, preOrderEndIndex int,

@@ -213,6 +213,26 @@ func postOrderByStack(rt *BinTreeNode, l *list.List) {
 }
 
 // 按层遍历
+// 递归
+func (tree *binaryTree)levelOrder() [][]interface{}{
+	res := make([][]interface{}, 0)
+	bfs(tree.root, &res, 0)
+	return  res
+}
+
+func bfs(node *BinTreeNode, res *[][]interface{}, level int){
+	if node == nil{
+		return
+	}
+	if len(*res) == level{
+		*res = append(*res, []interface{}{})
+	}
+	(*res)[level] = append((*res)[level], node.data)
+	for _, v := range []*BinTreeNode{node.lChild, node.rChild}{
+		bfs(v, res, level+1)
+	}
+}
+
 func (tree *binaryTree) SeqTraverse() *list.List{
 	traversal := list.New()
 	seqTraverse(tree.root, traversal)
