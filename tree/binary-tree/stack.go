@@ -6,6 +6,12 @@ type Stack struct {
 	Items []Item
 }
 
+func NewStack() *Stack{
+	return &Stack{
+		Items: []Item{},
+	}
+}
+
 func (s *Stack)New() *Stack{
 	s.Items = []Item{}
 	return s

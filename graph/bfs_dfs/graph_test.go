@@ -1,4 +1,4 @@
-package undirectd_graph
+package bfs_dfs
 
 import (
 	"fmt"
@@ -48,7 +48,6 @@ func TestGraph_BFS(t *testing.T) {
 		result = append(result, fmt.Sprintf("%v", n.val))
 	})
 	res := strings.Join(result, ",")
-	fmt.Println(res)
 	assert.Equal(t, "1,2,5,3,4", res)
 }
 

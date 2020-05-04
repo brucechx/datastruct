@@ -455,3 +455,5 @@ RB-DELETE-FIXUP(T, x)   恢复与保持红黑性质的工作
 - [红黑树实现参考](https://github.com/dotwoo/RbTree)
 - [红黑树可视化](https://github.com/kingAnyWHere/rbTree)
 - [july 详解红黑树](https://github.com/julycoding/The-Art-Of-Programming-By-July/blob/master/ebook/zh/03.01.md)
+### 实现
+- [数据结构和算法(Golang实现)(30)查找算法-2-3-4树和普通红黑树](https://studygolang.com/articles/27979)

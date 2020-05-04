@@ -67,8 +67,10 @@ func TestBinaryTree_InOrder(t *testing.T) {
 	tree := initBinaryTree()
 	l := tree.InOrder()
 	l2 := tree.InOrderByStack()
+	l3 := tree.MiddleOrder()
 	assert.Equal(t, l, l2)
 	assert.Equal(t, "243169578", listString(l2))
+	assert.Equal(t, "243169578", listString(l3))
 }
 
 func TestBinaryTree_PostOrder(t *testing.T) {

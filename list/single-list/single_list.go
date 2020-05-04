@@ -237,6 +237,20 @@ func (l *LinkList) reverse2(){
 	l.head = pre // 当前节点的前一个节点作为头节点，即最开始的节点
 }
 
+func (l *LinkList) reverse3(){
+	var pre *Node
+	var next *Node
+	curr := l.head
+	for curr != nil{
+		next = curr.next
+		curr.next = pre
+		pre = curr
+		curr = next
+	}
+	l.head = pre
+}
+
+
 func (l *LinkList) String() string{
 	var buffer bytes.Buffer
 	for p:=l.head; p != nil; p = p.next{

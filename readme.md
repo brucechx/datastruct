@@ -24,10 +24,12 @@
 + [trie_tree](./doc/tree/trie_tree.md)
 
 ## [graph](./doc/graph/README.md)
++ [bfs_dfs](./doc/graph/bfs_dfs.md)
 + [bellman_ford](./doc/graph/bellman_ford.md)
 + [dijkstra](./doc/graph/dijkstra.md)
 + [floyd_warshall](./doc/graph/floyd_warshall.md)
 + [min_tree](./doc/graph/min_tree.md)
++ [拓扑排序_kahn](./doc/graph/拓扑排序(Kahn).md)
 
 ## [散列表](./doc/hash_table_map/README.md)
 +  [hash_table](./doc/hash_table_map/hash_table.md)

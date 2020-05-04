@@ -17,6 +17,6 @@ func TestBellmanFord(t *testing.T) {
 	// start node
 	s := 1
 	dists := BellmanFord(g, s)
-
+	fmt.Println(dists)
 	fmt.Println(dists[4])
 }

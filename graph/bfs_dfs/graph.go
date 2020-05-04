@@ -1,4 +1,4 @@
-package undirectd_graph
+package bfs_dfs
 
 import (
 	"errors"

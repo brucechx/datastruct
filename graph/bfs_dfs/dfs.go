@@ -1,4 +1,4 @@
-package undirectd_graph
+package bfs_dfs
 
 // 深度遍历
 func (g *Graph) DFS(f func(n *Node)){

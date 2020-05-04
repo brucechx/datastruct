@@ -159,6 +159,34 @@ func inOrderByStack(rt *BinTreeNode, l *list.List) {
 }
 
 
+// 中序列遍历2, 非递归实现
+/*
+p = root
+st = []  # 用列表模拟实现栈的功能
+while p is not None or st:
+    while p is not None:
+        st.append(p)
+        p = p.left
+    p = st.pop()
+    proc(p.val)
+    p = p.right
+*/
+func (tree *binaryTree) MiddleOrder() *list.List{
+	p := tree.root
+	st := NewStack()
+	l := list.New()
+	for p != nil ||  ! st.isEmpty(){
+		for p != nil{
+			st.Push(p)
+			p = p.GetLChild()
+		}
+		p = st.Pop().(*BinTreeNode)
+		l.PushBack(p)
+		p = p.GetRChild()
+	}
+	return l
+}
+
 //后序遍历，并保存在链表里
 func (tree *binaryTree) PostOrder() *list.List {
 	traversal := list.New()
@@ -216,11 +244,11 @@ func postOrderByStack(rt *BinTreeNode, l *list.List) {
 // 递归
 func (tree *binaryTree)levelOrder() [][]interface{}{
 	res := make([][]interface{}, 0)
-	bfs(tree.root, &res, 0)
+	dfs(tree.root, &res, 0)
 	return  res
 }
 
-func bfs(node *BinTreeNode, res *[][]interface{}, level int){
+func dfs(node *BinTreeNode, res *[][]interface{}, level int){
 	if node == nil{
 		return
 	}
@@ -229,7 +257,7 @@ func bfs(node *BinTreeNode, res *[][]interface{}, level int){
 	}
 	(*res)[level] = append((*res)[level], node.data)
 	for _, v := range []*BinTreeNode{node.lChild, node.rChild}{
-		bfs(v, res, level+1)
+		dfs(v, res, level+1)
 	}
 }
 
